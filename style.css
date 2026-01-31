@@ -47,19 +47,35 @@ nav a.active {
 
 /* Introduction Elements*/
 
+.intro-main {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  background-color: #ffffff;
+  border-bottom: 2px solid black;
+}
+
 .intro {
   display: flex;          
-  align-items: center;    
+  align-items: center;   
+  justify-content: center; 
   gap: 100px;           
   padding: 10%;
   background-color: #ffffff; 
-  border-bottom: 2px solid black;
 }
 
 /* Text side */
 .intro-paragraph {
+  max-width: 600px;
   flex: 1;
-  padding: 50px;
+}
+
+.intro-paragraph h1{
+  margin-bottom: 0.5rem;
+}
+
+.intro-paragraph h3{
+  margin: 0;
 }
 
 /* Image side */
@@ -73,21 +89,55 @@ nav a.active {
   max-width: 450px;
 }
 
+/* Skills elements */
+.skills{
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  background-color: #ffffff;
+  border-bottom: 2px solid black;
+}
+
+/* Experience elements */
+.experience{
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  background-color: #ffffff;
+  border-bottom: 2px solid black;
+}
+
 /* Headings */
 h1{
   font-family: 'Atten New', sans-serif;
   font-weight: 500;
 }
 
+h2{
+  font-family: 'Atten New', sans-serif;
+  font-weight: 500;
+  font-size: 24px;
+}
+
 h3 {
   font-family: 'Atten New', sans-serif;
   font-weight: 400;
-  font-size: small;
+  font-size: 16px;
+  color: #4b4b4b;
 }
 
 p{
   font-family: 'Atten New', sans-serif;
+  font-size: 18px;
 }
+
+
+/* Footer */
+footer{
+  margin: 15px;
+}
+
+
 
 /* Fonts */
 @font-face {
