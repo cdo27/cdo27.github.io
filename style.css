@@ -3,18 +3,18 @@ body {
   background-color: rgb(255, 182, 73);
 }
 
-/* Header CSS */
+/* Navigation Bar */
 header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px;
+  padding: 0.75rem 1.5rem;
   background-color: #272727;
   font-family: 'Atten New', sans-serif;
 }
 
 .logo img {
-  height: 35px;
+  height: 2rem;
   width: auto;
 }
 
@@ -25,14 +25,14 @@ header {
 
 nav {
   display: flex;
-  gap: 30px;
+  gap: 2rem;
 }
 
 nav a {
   text-decoration: none;
   color: #dcdcdc;
   font-weight: 500;
-  padding: 6px 4px;   /* clickable area */
+  padding: 0.4rem 0.25rem;
 }
 
 nav a:hover {
@@ -41,105 +41,100 @@ nav a:hover {
 
 nav a.active {
   color: #dba000;
-  /* border-bottom: 1px solid #cf9800; */
 }
 
-
-/* Introduction Elements*/
-
+/* Intro Section */
 .intro-main {
   display: flex;
   justify-content: center;
   width: 100%;
   background-color: #ffffff;
-  border-bottom: 2px solid black;
+  border-bottom: 0.125rem solid black;
 }
 
 .intro {
-  display: flex;          
-  align-items: center;   
-  justify-content: center; 
-  gap: 100px;           
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6.25rem;
   padding: 10%;
-  background-color: #ffffff; 
+  background-color: #ffffff;
 }
 
-/* Text side */
 .intro-paragraph {
-  max-width: 600px;
+  max-width: 37.5rem;
   flex: 1;
 }
 
-.intro-paragraph h1{
+.intro-paragraph h1 {
   margin-bottom: 0.5rem;
 }
 
-.intro-paragraph h3{
+.intro-paragraph h3 {
   margin: 0;
 }
 
-/* Image side */
 .profile {
   flex: 1;
 }
 
-.profile img{
-  width: 100%;  
+.profile img {
+  width: 100%;
   height: auto;
-  max-width: 450px;
+  max-width: 28rem;
 }
 
-/* Skills elements */
-.skills{
+/* Skill Section */
+.skill-main {
   display: flex;
   justify-content: center;
   width: 100%;
   background-color: #ffffff;
-  border-bottom: 2px solid black;
+  border-bottom: 0.125rem solid black;
 }
 
-/* Experience elements */
-.experience{
+/* Experience Section */
+.experience {
   display: flex;
   justify-content: center;
   width: 100%;
   background-color: #ffffff;
-  border-bottom: 2px solid black;
+  border-bottom: 0.125rem solid black;
 }
 
-/* Headings */
-h1{
+/* Fonts */
+h1 {
   font-family: 'Atten New', sans-serif;
   font-weight: 500;
 }
 
-h2{
+h2 {
   font-family: 'Atten New', sans-serif;
   font-weight: 500;
-  font-size: 24px;
+  font-size: 1.5rem;
 }
 
 h3 {
   font-family: 'Atten New', sans-serif;
   font-weight: 400;
-  font-size: 16px;
+  font-size: 0.9rem;
   color: #4b4b4b;
 }
 
-p{
+p {
   font-family: 'Atten New', sans-serif;
-  font-size: 18px;
+  font-size: 1rem;
 }
 
-
-/* Footer */
-footer{
-  margin: 15px;
+footer {
+  margin: 1rem;
 }
 
+ul {
+  font-family: 'Atten New', sans-serif;
+  font-size: 1rem;
+}
 
-
-/* Fonts */
 @font-face {
   font-family: 'Atten New';
   src: url('/fonts/atten-new/AttenNewRegular.otf') format('opentype');
@@ -153,5 +148,3 @@ footer{
   font-weight: 500;
   font-style: normal;
 }
-
-
