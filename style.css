@@ -3,6 +3,8 @@ body {
   background-color: rgb(255, 182, 73);
 }
 
+
+
 /* Navigation Bar */
 header {
   display: flex;
@@ -84,6 +86,35 @@ nav a.active {
   max-width: 28rem;
 }
 
+/* Contacts */
+.contact{
+  display: flex;
+  align-items: center;
+  justify-content: left;
+  gap: 3rem;
+
+  background-color: #ffffff;
+
+}
+.contact-email{
+  font-family: 'Atten New', sans-serif;
+  font-size: 0.8rem;
+  color: #4b4b4b;
+}
+
+.contact-button{
+  font-family: 'Atten New', sans-serif;
+  font-size: 1rem;
+  display: block;
+  background-color: rgb(255, 188, 62);
+  padding: 8px 20px;
+
+}
+.contact-button:hover {
+  background-color: darkorange;
+}
+
+
 /* Skill Section */
 .skill-main {
   display: flex;
@@ -93,13 +124,42 @@ nav a.active {
   border-bottom: 0.125rem solid black;
 }
 
+.skills{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6.25rem;
+  padding: 10%;
+  background-color: #ffffff;
+
+}
+
 /* Experience Section */
-.experience {
+.project-main {
   display: flex;
   justify-content: center;
   width: 100%;
   background-color: #ffffff;
   border-bottom: 0.125rem solid black;
+}
+
+.projects{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6.25rem;
+  padding: 10%;
+  background-color: #ffffff;
+}
+
+/* Visualization Section */
+.visualization-section{
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  background-color: #ffffff;
+  border-bottom: 0.125rem solid black;
+
 }
 
 /* Fonts */
