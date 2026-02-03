@@ -1,0 +1,130 @@
+//SVG Art
+//get container by div id
+const artcontainer = document.getElementById("svg-art");
+const svgns = "http://www.w3.org/2000/svg";
+
+//canvas and frame
+const svg = document.createElementNS(svgns, "svg");
+svg.setAttribute("width", 500);
+svg.setAttribute("height", 250);
+svg.style.border = "3px solid brown";
+artcontainer.appendChild(svg);
+
+const body = document.createElementNS(svgns, "ellipse");
+body.setAttribute("cx", 250);
+body.setAttribute("cy", 170);
+body.setAttribute("rx", 150);
+body.setAttribute("ry", 90);
+body.setAttribute("fill", "#c4a69f");
+svg.appendChild(body);
+
+const head = document.createElementNS(svgns, "ellipse");
+head.setAttribute("cx", 160);
+head.setAttribute("cy", 130);
+head.setAttribute("rx", 75);
+head.setAttribute("ry", 90);
+head.setAttribute("fill", "#c4a69f");
+head.setAttribute("transform", "rotate(-5, 200, 150)");
+svg.appendChild(head);
+
+const bottom = document.createElementNS(svgns, "rect");
+bottom.setAttribute("x", 0);
+bottom.setAttribute("y", 220);
+bottom.setAttribute("width", 500);
+bottom.setAttribute("height", 50);
+bottom.setAttribute("fill", "#624a33");
+svg.appendChild(bottom);
+
+//ears
+const leftEar = document.createElementNS(svgns, "path");
+leftEar.setAttribute("d", "M 80, 80 L125,30 L165,80 Z"); 
+leftEar.setAttribute("fill", "#c4a69f");
+leftEar.setAttribute("transform", "rotate(-20, 125, 55)");
+svg.appendChild(leftEar);
+
+const rightEar = document.createElementNS(svgns, "path");
+rightEar.setAttribute("d", "M130,80 L190,30 L215,80 Z");
+rightEar.setAttribute("fill", "#c4a69f");
+svg.appendChild(rightEar);
+
+//tail
+const tail = document.createElementNS(svgns, "path");
+tail.setAttribute("d", "M400,175 C440,170 440,120 420,120");
+
+tail.setAttribute("stroke", "#c4a69f");
+tail.setAttribute("stroke-width", 25);
+tail.setAttribute("fill", "none");
+tail.setAttribute("stroke-linecap", "round");
+
+svg.appendChild(tail);
+
+//eyes
+const leftEye = document.createElementNS(svgns, "circle");
+leftEye.setAttribute("cx", 130);
+leftEye.setAttribute("cy", 80);
+leftEye.setAttribute("r", 5);
+leftEye.setAttribute("fill", "#292929");
+
+svg.appendChild(leftEye);
+
+const rightEye = document.createElementNS(svgns, "circle");
+rightEye.setAttribute("cx", 175);
+rightEye.setAttribute("cy", 80);
+rightEye.setAttribute("r", 5);
+rightEye.setAttribute("fill", "#3f3f3f");
+
+svg.appendChild(rightEye);
+
+//mouth
+const mouth = document.createElementNS(svgns, "path");
+mouth.setAttribute("d", "M153,85 C155,70 150,95 160,90");
+
+mouth.setAttribute("stroke", "#474747");
+mouth.setAttribute("stroke-width", 5);
+mouth.setAttribute("fill", "none");
+mouth.setAttribute("stroke-linecap", "round");
+
+svg.appendChild(mouth);
+
+const rightMouth = document.createElementNS(svgns, "path");
+rightMouth.setAttribute("d", "M153,85 C155,70 150,95 160,90");
+rightMouth.setAttribute("stroke", "#474747");
+rightMouth.setAttribute("stroke-width", 5);
+rightMouth.setAttribute("fill", "none");
+rightMouth.setAttribute("stroke-linecap", "round");
+rightMouth.setAttribute("transform", "translate(306,0) scale(-1,1)");
+
+svg.appendChild(rightMouth);
+
+//whiskers
+const whisker1 = document.createElementNS(svgns, "line");
+whisker1.setAttribute("x1", 94);  // start X
+whisker1.setAttribute("y1", 85);   // start Y
+whisker1.setAttribute("x2", 83);  // end X
+whisker1.setAttribute("y2", 82);   // end Y
+whisker1.setAttribute("stroke", "#474747");
+whisker1.setAttribute("stroke-width", 3);
+whisker1.setAttribute("stroke-linecap", "round");
+
+svg.appendChild(whisker1);
+
+const whisker2 = document.createElementNS(svgns, "line");
+whisker2.setAttribute("x1", 98);  // start X
+whisker2.setAttribute("y1", 77);   // start Y
+whisker2.setAttribute("x2", 86);  // end X
+whisker2.setAttribute("y2", 70);   // end Y
+whisker2.setAttribute("stroke", "#474747");
+whisker2.setAttribute("stroke-width", 3);
+whisker2.setAttribute("stroke-linecap", "round");
+
+svg.appendChild(whisker2);
+
+
+// const head = document.createElementNS(svgns, "ellipse");
+// head.setAttribute("cx", 200);
+// head.setAttribute("cy", 120);
+// head.setAttribute("rx", 80);
+// head.setAttribute("ry", 60);
+// head.setAttribute("fill", "#c4a69f");
+// svg.appendChild(head);
+
