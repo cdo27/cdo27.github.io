@@ -203,6 +203,110 @@ ul {
   font-size: 1rem;
 }
 
+/* fix for 320px */
+@media (max-width: 320px) {
+/* Intro Section */
+.intro-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: #ffffff;
+  border-bottom: 0.125rem solid black;
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6.25rem;
+  padding: 10%;
+  background-color: #ffffff;
+}
+
+.profile img {
+  width: 100%;
+  height: auto;
+  max-width: 28rem;
+}
+
+/* Contacts */
+.contact{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: left;
+  gap: 2rem;
+  background-color: #ffffff;
+
+}
+.contact-email{
+  font-family: 'Atten New', sans-serif;
+  font-size: 0.8rem;
+  color: #4b4b4b;
+}
+
+/* Skill Section */
+.skill-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: #ffffff;
+  border-bottom: 0.125rem solid black;
+}
+
+.skills{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6.25rem;
+  padding: 8%;
+  background-color: #ffffff;
+
+}
+
+/* Experience Section */
+.project-main {
+  display: flex;
+  flex-direction: column; 
+  justify-content: center;
+  background-color: #ffffff;
+  border-bottom: 0.125rem solid black;
+}
+
+.projects{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3rem;
+  padding: 8%;
+  background-color: #ffffff;
+}
+
+/* Visualization Section */
+.visualization-section{
+  display: flex;
+  flex-direction: column; 
+  padding-left: 10%;
+  padding-top: 5%;
+  justify-content: center;
+  background-color: #ffffff;
+  border-bottom: 0.125rem solid black;
+
+}
+
+.visualization-section h1 {
+  margin: 0; 
+}
+
+.svg-section{
+  padding-bottom: 10%;
+}
+}
+
+
 @font-face {
   font-family: 'Atten New';
   src: url('/fonts/atten-new/AttenNewRegular.otf') format('opentype');
