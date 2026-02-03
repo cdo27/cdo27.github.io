@@ -3,8 +3,6 @@ body {
   background-color: rgb(255, 182, 73);
 }
 
-
-
 /* Navigation Bar */
 header {
   display: flex;
@@ -119,7 +117,6 @@ nav a.active {
 .skill-main {
   display: flex;
   justify-content: center;
-  width: 100%;
   background-color: #ffffff;
   border-bottom: 0.125rem solid black;
 }
@@ -138,7 +135,6 @@ nav a.active {
 .project-main {
   display: flex;
   justify-content: center;
-  width: 100%;
   background-color: #ffffff;
   border-bottom: 0.125rem solid black;
 }
@@ -155,11 +151,21 @@ nav a.active {
 /* Visualization Section */
 .visualization-section{
   display: flex;
+  flex-direction: column; 
+  padding-left: 10%;
+  padding-top: 8%;
   justify-content: center;
-  width: 100%;
   background-color: #ffffff;
   border-bottom: 0.125rem solid black;
 
+}
+
+.visualization-section h1 {
+  margin: 0; 
+}
+
+.svg-section{
+  padding-bottom: 10%;
 }
 
 /* Fonts */
@@ -172,6 +178,7 @@ h2 {
   font-family: 'Atten New', sans-serif;
   font-weight: 500;
   font-size: 1.5rem;
+  color: #b18200;
 }
 
 h3 {

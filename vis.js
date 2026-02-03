@@ -5,9 +5,11 @@ const svgns = "http://www.w3.org/2000/svg";
 
 //canvas and frame
 const svg = document.createElementNS(svgns, "svg");
-svg.setAttribute("width", 500);
-svg.setAttribute("height", 250);
-svg.style.border = "3px solid brown";
+
+svg.setAttribute("viewBox", "0 0 500 250");
+svg.style.width = "60%";
+svg.style.height = "auto";
+svg.style.border = "3px solid black";
 artcontainer.appendChild(svg);
 
 const body = document.createElementNS(svgns, "ellipse");
@@ -119,12 +121,26 @@ whisker2.setAttribute("stroke-linecap", "round");
 
 svg.appendChild(whisker2);
 
+const whisker3 = document.createElementNS(svgns, "line");
+whisker3.setAttribute("x1", 220);  // start X
+whisker3.setAttribute("y1", 73);   // start Y
+whisker3.setAttribute("x2", 200);  // end X
+whisker3.setAttribute("y2", 78);   // end Y
+whisker3.setAttribute("stroke", "#474747");
+whisker3.setAttribute("stroke-width", 3);
+whisker3.setAttribute("stroke-linecap", "round");
 
-// const head = document.createElementNS(svgns, "ellipse");
-// head.setAttribute("cx", 200);
-// head.setAttribute("cy", 120);
-// head.setAttribute("rx", 80);
-// head.setAttribute("ry", 60);
-// head.setAttribute("fill", "#c4a69f");
-// svg.appendChild(head);
+svg.appendChild(whisker3);
+
+const whisker4 = document.createElementNS(svgns, "line");
+whisker4.setAttribute("x1", 220);  // start X
+whisker4.setAttribute("y1", 86);   // start Y
+whisker4.setAttribute("x2", 200);  // end X
+whisker4.setAttribute("y2", 85);   // end Y
+whisker4.setAttribute("stroke", "#474747");
+whisker4.setAttribute("stroke-width", 3);
+whisker4.setAttribute("stroke-linecap", "round");
+
+svg.appendChild(whisker4);
+
 
