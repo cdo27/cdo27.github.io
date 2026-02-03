@@ -1,13 +1,145 @@
 //SVG Art
 //get container by div id
 const artcontainer = document.getElementById("svg-art");
+const datacontainer = document.getElementById("data-vis");
+const tooltip = document.getElementById("tooltip");
 const svgns = "http://www.w3.org/2000/svg";
 
-//canvas and frame
+//data
+const datasvg = document.createElementNS(svgns, "svg");
+
+datasvg.setAttribute("viewBox", "0 0 650 400");
+datasvg.style.width = "60%";
+datasvg.style.height = "auto";
+datasvg.style.border = "3px solid black";
+datacontainer.appendChild(datasvg);
+
+const bakingData = [
+  { day:"Mon", hours:0, item:"", amount:0 },
+  { day:"Tues", hours:0, item:"", amount:0 },
+  { day:"Wed", hours:1, item:"Maple Pecan Danish", amount:2 },
+  { day:"Fri", hours:1.5, item:"Salt Bread", amount:8 },
+  { day:"Thurs", hours:0, item:"", amount:0 },
+  { day:"Sat", hours:0.5, item:"Macademia Cookies", amount:6 },
+  { day:"Sun", hours:2, item:"Mini Chicken Pot Pies", amount:8 }
+];
+
+const barWidth = 40;
+const spacing = 70;
+const baseline = 320;
+const scale = 100;
+const maxAmount = Math.max(...bakingData.map(d => d.amount));
+const maxHours = Math.max(...bakingData.map(d => d.hours));
+
+//title
+const title = document.createElementNS(svgns, "text");
+title.setAttribute("x", 315);
+title.setAttribute("y", 40);
+title.setAttribute("text-anchor", "middle");
+title.setAttribute("font-size", "18");
+title.setAttribute("font-weight", "bold");
+title.style.fontFamily = "New Atten, sans-serif";
+title.textContent = "Amount of Time Spent Baking Over the Week";
+datasvg.appendChild(title);
+
+
+for(let h = 0; h <= maxHours; h += 0.5){
+  const y = baseline - h * scale;
+
+  //horizontal line
+  const line = document.createElementNS(svgns, "line");
+  line.setAttribute("x1", 80);  
+  line.setAttribute("x2", 600); 
+  line.setAttribute("y1", y);
+  line.setAttribute("y2", y);
+  line.setAttribute("stroke", "#000"); 
+  datasvg.appendChild(line);
+
+  //y axis label
+  const label = document.createElementNS(svgns, "text");
+  label.setAttribute("x", 70);  
+  label.setAttribute("y", y);
+  label.setAttribute("text-anchor", "end");
+  label.setAttribute("dominant-baseline", "middle");
+  label.textContent = h + "h";
+  label.setAttribute("font-size", "14");
+  label.style.fontFamily = "New Atten, sans-serif";
+  datasvg.appendChild(label);
+}
+
+
+bakingData.forEach((d, i) => {
+  const x = 80 + i * spacing;
+  const barHeight = d.hours * scale;
+  const y = baseline - barHeight;
+
+  //bars
+  const rect = document.createElementNS(svgns,"rect");
+  rect.setAttribute("x", x);
+  rect.setAttribute("y", y);
+  rect.setAttribute("width", barWidth);
+  rect.setAttribute("height", barHeight);
+
+  const intensity = d.amount / maxAmount; //bar color based on amount
+  const color = `rgba(217,160,102,${0.3 + intensity*0.7})`;
+  rect.setAttribute("fill", color);
+
+  datasvg.appendChild(rect);
+
+  //week label
+  const dayText = document.createElementNS(svgns,"text");
+  dayText.setAttribute("x", x + barWidth/2);
+  dayText.setAttribute("y", baseline + 20);
+  dayText.setAttribute("text-anchor","middle");
+  dayText.setAttribute("font-size", "14");
+  dayText.style.fontFamily = "New Atten, sans-serif";
+  dayText.textContent = d.day;
+
+  datasvg.appendChild(dayText);
+
+//item label
+//   const itemText = document.createElementNS(svgns,"text");
+//   itemText.setAttribute("x", x + barWidth/2);
+//   itemText.setAttribute("y", y - 5);
+//   itemText.setAttribute("text-anchor","middle");
+//   itemText.setAttribute("font-size","8");
+//   itemText.style.fontFamily = "New Atten, sans-serif";
+//   itemText.textContent = d.item;
+
+//   datasvg.appendChild(itemText);
+
+// interactivity, hover to see amount and what was baked
+  rect.addEventListener("mousemove", (e) => {
+    tooltip.style.left = e.pageX + 10 + "px";
+    tooltip.style.top = e.pageY + 10 + "px";
+    tooltip.style.opacity = 1;
+    tooltip.textContent = d.item 
+      ? `${d.item}: ${d.amount} baked, ${d.hours}h spent`
+      : "No baking";
+  });
+
+  rect.addEventListener("mouseleave", () => {
+    tooltip.style.opacity = 0;
+  });
+
+  //highlight bar on hover
+  rect.addEventListener("mouseenter", () => {
+    rect.setAttribute("stroke", "#333");
+    rect.setAttribute("stroke-width", 2);
+  });
+  rect.addEventListener("mouseleave", () => {
+    rect.removeAttribute("stroke");
+    rect.removeAttribute("stroke-width");
+  });
+
+
+});
+
+//art
 const svg = document.createElementNS(svgns, "svg");
 
 svg.setAttribute("viewBox", "0 0 500 250");
-svg.style.width = "60%";
+svg.style.width = "50%";
 svg.style.height = "auto";
 svg.style.border = "3px solid black";
 artcontainer.appendChild(svg);
