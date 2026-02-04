@@ -183,6 +183,13 @@ h2 {
   color: #b18200;
 }
 
+.intro-paragraph h2 {
+  font-family: 'Atten New', sans-serif;
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: #4b4b4b;
+}
+
 h3 {
   font-family: 'Atten New', sans-serif;
   font-weight: 400;
