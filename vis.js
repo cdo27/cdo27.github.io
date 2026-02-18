@@ -1,278 +1,599 @@
-//SVG Art
-//get container by div id
-const artcontainer = document.getElementById("svg-art");
-const datacontainer = document.getElementById("data-vis");
-const tooltip = document.getElementById("tooltip");
-const svgns = "http://www.w3.org/2000/svg";
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
-//data
-const datasvg = document.createElementNS(svgns, "svg");
+///global sales
+makeVis1();
 
-datasvg.setAttribute("viewBox", "0 0 650 400");
-datasvg.style.width = "60%";
-datasvg.style.height = "auto";
-datasvg.style.border = "3px solid black";
-datacontainer.appendChild(datasvg);
+//Platform Sales by Year
+makeVis2();
 
-const bakingData = [
-  { day:"Mon", hours:0, item:"", amount:0 },
-  { day:"Tues", hours:0, item:"", amount:0 },
-  { day:"Wed", hours:1, item:"Maple Pecan Danish", amount:2 },
-  { day:"Fri", hours:1.5, item:"Salt Bread", amount:8 },
-  { day:"Thurs", hours:0, item:"", amount:0 },
-  { day:"Sat", hours:0.5, item:"Macademia Cookies", amount:6 },
-  { day:"Sun", hours:2, item:"Mini Chicken Pot Pies", amount:8 }
-];
-
-const barWidth = 40;
-const spacing = 70;
-const baseline = 320;
-const scale = 100;
-const maxAmount = Math.max(...bakingData.map(d => d.amount));
-const maxHours = Math.max(...bakingData.map(d => d.hours));
-
-//title
-const title = document.createElementNS(svgns, "text");
-title.setAttribute("x", 315);
-title.setAttribute("y", 40);
-title.setAttribute("text-anchor", "middle");
-title.setAttribute("font-size", "18");
-title.setAttribute("font-weight", "bold");
-title.style.fontFamily = "New Atten, sans-serif";
-title.textContent = "Amount of Time Spent Baking Over the Week";
-datasvg.appendChild(title);
+//Game Peak Sales Over Time
+makeVis3();
 
 
-for(let h = 0; h <= maxHours; h += 0.5){
-  const y = baseline - h * scale;
+function makeVis1() {
+  const width = 800;
+  const height = 600;
+  const margin = { top: 40, right: 120, bottom: 100, left: 70 };
 
-  //horizontal line
-  const line = document.createElementNS(svgns, "line");
-  line.setAttribute("x1", 80);  
-  line.setAttribute("x2", 600); 
-  line.setAttribute("y1", y);
-  line.setAttribute("y2", y);
-  line.setAttribute("stroke", "#000"); 
-  datasvg.appendChild(line);
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
 
-  //y axis label
-  const label = document.createElementNS(svgns, "text");
-  label.setAttribute("x", 70);  
-  label.setAttribute("y", y);
-  label.setAttribute("text-anchor", "end");
-  label.setAttribute("dominant-baseline", "middle");
-  label.textContent = h + "h";
-  label.setAttribute("font-size", "14");
-  label.style.fontFamily = "New Atten, sans-serif";
-  datasvg.appendChild(label);
+  const svg = d3.create("svg").attr("width", width).attr("height", height);
+  const visContainer = document.querySelector("#visContainer1");
+  visContainer.append(svg.node());
+
+  // margins
+  const g = svg.append("g")
+  .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+  d3.csv("data/videogames_wide.csv").then(data => {
+
+    //calc total sales per genre and platform for sorting
+    const genreTotals = d3.rollup(
+    data,
+    v => d3.sum(v, d => +d.Global_Sales),
+    d => d.Genre
+    );
+
+    const platformTotals = d3.rollup(
+    data,
+    v => d3.sum(v, d => +d.Global_Sales),
+    d => d.Platform
+    );
+
+    // sort genres highest to lowest
+    const genres = [...new Set(data.map(d => d.Genre))]
+    .sort((a, b) => genreTotals.get(b) - genreTotals.get(a));
+
+    // sort platforms lowest to highest
+    const platforms = [...new Set(data.map(d => d.Platform))]
+    .sort((a, b) => platformTotals.get(a) - platformTotals.get(b));
+
+    // calc sales by genre + platform
+    const salesMap = d3.rollup(
+      data,
+      v => d3.sum(v, d => +d.Global_Sales),
+      d => d.Genre,
+      d => d.Platform
+    );
+
+    // scales
+    const xScale = d3.scaleBand()
+      .domain(genres)
+      .range([0, innerWidth])
+      .padding(0.05);
+
+    const yScale = d3.scaleBand()
+      .domain(platforms)
+      .range([0, innerHeight])
+      .padding(0.05);
+
+    const colorScale = d3.scaleSequential()
+      .domain([0, d3.max(data, d => +d.Global_Sales)])
+      .interpolator(d3.interpolateRgb("#bfecf7", "#6786ea"));
+
+    // x axis
+    g.append("g")
+      .attr("transform", `translate(0, ${innerHeight})`)
+      .call(d3.axisBottom(xScale))
+      .selectAll("text")
+      .attr("transform", "rotate(-45)")
+      .style("text-anchor", "end");
+
+    // y axis
+    g.append("g")
+      .call(d3.axisLeft(yScale));
+
+    // draw rects
+    genres.forEach(genre => {
+      platforms.forEach(platform => {
+        const sales = salesMap.get(genre)?.get(platform) || 0;
+
+        g.append("rect")
+          .attr("x", xScale(genre))
+          .attr("y", yScale(platform))
+          .attr("width", xScale.bandwidth())
+          .attr("height", yScale.bandwidth())
+          .attr("fill", sales > 0 ? colorScale(sales) : "#f9f9f9")
+          .on("mouseover", function(event) {
+            d3.select(this).attr("stroke", "black").attr("stroke-width", 2);
+            tooltip.style("opacity", 1)
+              .html(`<strong>${genre} / ${platform}</strong><br>Sales: ${sales.toFixed(2)}M`)
+              .style("left", (event.pageX + 10) + "px")
+              .style("top", (event.pageY - 20) + "px");
+          })
+          .on("mouseout", function() {
+            d3.select(this).attr("stroke", "none");
+            tooltip.style("opacity", 0);
+          });
+      });
+    });
+
+    //LABELS
+    // genre
+    g.append("text")
+      .attr("x", innerWidth / 2)
+      .attr("y", innerHeight + margin.bottom - 30)
+      .attr("text-anchor", "middle")
+      .style("font-size", "13px")
+      .style("font-weight", "bold")
+      .style("font-family", "'Atten New', sans-serif")
+      .text("Genre");
+
+    // plat
+    g.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -innerHeight / 2)
+      .attr("y", -margin.left + 12)
+      .attr("text-anchor", "middle")
+      .style("font-size", "13px")
+      .style("font-weight", "bold")
+      .style("font-family", "'Atten New', sans-serif")
+      .text("Platform");
+
+
+    // title
+    svg.append("text")
+    .attr("x", width / 2)
+    .attr("y", margin.top / 2)
+    .attr("text-anchor", "middle")
+    .style("font-size", "16px")
+    .style("font-weight", "bold")
+    .style("font-family", "'Atten New', sans-serif")
+    .text("Global Sales by Genre and Platform");
+
+    // tooltip
+    const tooltip = d3.select("body").append("div")
+    .style("position", "absolute")
+    .style("background", "rgba(0,0,0,0.75)")
+    .style("color", "white")
+    .style("padding", "6px 10px")
+    .style("border-radius", "6px")
+    .style("font-size", "13px")
+    .style("font-family", "'Atten New', sans-serif")
+    .style("pointer-events", "none")
+    .style("opacity", 0);
+
+    // legend dimensions
+    const legendWidth = 20;
+    const legendHeight = 200;
+    const legendX = width - 100;
+    const legendY = margin.top + 20;
+
+    //gradient
+    const defs = svg.append("defs");
+    const linearGradient = defs.append("linearGradient")
+      .attr("id", "legend-gradient")
+      .attr("x1", "0%").attr("y1", "0%")
+      .attr("x2", "0%").attr("y2", "100%"); 
+
+    linearGradient.append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", "#0c0c9b"); 
+
+    linearGradient.append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", "#bfecf7");
+
+    //gradient rect
+    svg.append("rect")
+      .attr("x", legendX)
+      .attr("y", legendY)
+      .attr("width", legendWidth)
+      .attr("height", legendHeight)
+      .style("fill", "url(#legend-gradient)");
+
+    // legend title
+    svg.append("text")
+      .attr("x", legendX + legendWidth / 2 -10)
+      .attr("y", legendY - 10)
+      .attr("text-anchor", "left")
+      .style("font-size", "11px")
+      .style("font-weight", "bold")
+      .style("font-family", "'Atten New', sans-serif")
+      .text("Global Sales (M)");
+
+    // legend scale + axis
+    const legendScale = d3.scaleLinear()
+    .domain([300, 0])
+    .range([0, legendHeight]);
+
+    const legendAxis = d3.axisRight(legendScale)
+    .tickValues([300, 200, 100]); 
+
+    svg.append("g")
+      .attr("transform", `translate(${legendX + legendWidth}, ${legendY})`)
+      .call(legendAxis);
+
+  });
 }
 
+function makeVis2() {
+  const width = 800;
+  const height = 600;
+  const margin = { top: 40, right: 120, bottom: 100, left: 70 };
 
-bakingData.forEach((d, i) => {
-  const x = 80 + i * spacing;
-  const barHeight = d.hours * scale;
-  const y = baseline - barHeight;
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
 
-  //bars
-  const rect = document.createElementNS(svgns,"rect");
-  rect.setAttribute("x", x);
-  rect.setAttribute("y", y);
-  rect.setAttribute("width", barWidth);
-  rect.setAttribute("height", barHeight);
+  const svg = d3.create("svg").attr("width", width).attr("height", height);
+  const visContainer = document.querySelector("#visContainer2");
+  visContainer.append(svg.node());
 
-  const intensity = d.amount / maxAmount; //bar color based on amount
-  const color = `rgba(217,160,102,${0.3 + intensity*0.7})`;
-  rect.setAttribute("fill", color);
+  const g = svg.append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-  datasvg.appendChild(rect);
+  d3.csv("data/videogames_wide.csv").then(data => {
 
-  //week label
-  const dayText = document.createElementNS(svgns,"text");
-  dayText.setAttribute("x", x + barWidth/2);
-  dayText.setAttribute("y", baseline + 20);
-  dayText.setAttribute("text-anchor","middle");
-  dayText.setAttribute("font-size", "14");
-  dayText.style.fontFamily = "New Atten, sans-serif";
-  dayText.textContent = d.day;
+    // calc sales by platform + year
+    const salesMap = d3.rollup(
+      data,
+      v => d3.sum(v, d => +d.Global_Sales),
+      d => d.Platform,
+      d => d.Year
+    );
 
-  datasvg.appendChild(dayText);
+    const platformTotals = d3.rollup(
+      data,
+      v => d3.sum(v, d => +d.Global_Sales),
+      d => d.Platform
+    );
 
-//item label
-//   const itemText = document.createElementNS(svgns,"text");
-//   itemText.setAttribute("x", x + barWidth/2);
-//   itemText.setAttribute("y", y - 5);
-//   itemText.setAttribute("text-anchor","middle");
-//   itemText.setAttribute("font-size","8");
-//   itemText.style.fontFamily = "New Atten, sans-serif";
-//   itemText.textContent = d.item;
+    // sort platforms highest to lowest
+    const platforms = [...new Set(data.map(d => d.Platform))]
+      .sort((a, b) => platformTotals.get(b) - platformTotals.get(a));
 
-//   datasvg.appendChild(itemText);
+    const years = [...new Set(data.map(d => d.Year))]
+      .filter(y => y && +y <= 2016) // up to 2017, cause 2020 data and n/a?
+      .sort();
 
-// interactivity, hover to see amount and what was baked
-  rect.addEventListener("mousemove", (e) => {
-    tooltip.style.left = e.pageX + 10 + "px";
-    tooltip.style.top = e.pageY + 10 + "px";
-    tooltip.style.opacity = 1;
-    tooltip.textContent = d.item 
-      ? `${d.item}: ${d.amount} baked, ${d.hours}h spent`
-      : "No baking";
+    const xScale = d3.scaleBand()
+      .domain(years)
+      .range([0, innerWidth])
+      .padding(0.05);
+
+    const yScale = d3.scaleBand()
+      .domain(platforms)
+      .range([0, innerHeight])
+      .padding(0.05);
+
+    const maxSales = d3.max(
+      platforms.flatMap(p => years.map(y => salesMap.get(p)?.get(y) || 0))
+    );
+
+    const colorScale = d3.scaleSequential()
+      .domain([0, maxSales])
+      .interpolator(d3.interpolateRgb("#dbeafe", "#0c0c9b"));
+
+    // x axis
+    g.append("g")
+      .attr("transform", `translate(0, ${innerHeight})`)
+      .call(d3.axisBottom(xScale))
+      .selectAll("text")
+      .attr("transform", "rotate(-45)")
+      .style("text-anchor", "end");
+
+    // y axis
+    g.append("g")
+      .call(d3.axisLeft(yScale));
+
+    // draw rects
+    platforms.forEach(platform => {
+      years.forEach(year => {
+        const sales = salesMap.get(platform)?.get(year) || 0;
+
+        g.append("rect")
+          .attr("x", xScale(year))
+          .attr("y", yScale(platform))
+          .attr("width", xScale.bandwidth())
+          .attr("height", yScale.bandwidth())
+          .attr("fill", sales > 0 ? colorScale(sales) : "#f9f9f9")
+          .on("mousemove", function(event) {
+            d3.select(this).attr("stroke", "black").attr("stroke-width", 2);
+            tooltip.style("opacity", 1)
+              .html(`<strong>${platform} / ${year}</strong><br>Sales: ${sales.toFixed(2)}M`)
+              .style("left", (event.pageX + 10) + "px")
+              .style("top", (event.pageY + 10) + "px");
+          })
+          .on("mouseout", function() {
+            d3.select(this).attr("stroke", "none");
+            tooltip.style("opacity", 0);
+          });
+      });
+    });
+
+    // year
+    g.append("text")
+      .attr("x", innerWidth / 2)
+      .attr("y", innerHeight + margin.bottom - 50)
+      .attr("text-anchor", "middle")
+      .style("font-size", "13px")
+      .style("font-weight", "bold")
+      .style("font-family", "'Atten New', sans-serif")
+      .text("Year");
+
+    // y label
+    g.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -innerHeight / 2)
+      .attr("y", -margin.left + 12)
+      .attr("text-anchor", "middle")
+      .style("font-size", "13px")
+      .style("font-weight", "bold")
+      .style("font-family", "'Atten New', sans-serif")
+      .text("Platform");
+
+    // title
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", margin.top / 2)
+      .attr("text-anchor", "middle")
+      .style("font-size", "16px")
+      .style("font-weight", "bold")
+      .style("font-family", "'Atten New', sans-serif")
+      .text("Platform Sales by Year");
+
+    // tooltip
+    const tooltip = d3.select("body").append("div")
+      .style("position", "absolute")
+      .style("background", "rgba(0,0,0,0.75)")
+      .style("color", "white")
+      .style("padding", "6px 10px")
+      .style("border-radius", "6px")
+      .style("font-size", "13px")
+      .style("font-family", "'Atten New', sans-serif")
+      .style("pointer-events", "none")
+      .style("opacity", 0);
+
+    // legend
+    const legendWidth = 20;
+    const legendHeight = 200;
+    const legendX = width - 100;
+    const legendY = margin.top + 20;
+
+    const defs = svg.append("defs");
+    const linearGradient = defs.append("linearGradient")
+      .attr("id", "legend-gradient-2")  // unique id!
+      .attr("x1", "0%").attr("y1", "0%")
+      .attr("x2", "0%").attr("y2", "100%");
+
+    linearGradient.append("stop")
+      .attr("offset", "0%")
+      .attr("stop-color", "#0c0c9b");
+
+    linearGradient.append("stop")
+      .attr("offset", "100%")
+      .attr("stop-color", "#dbeafe");
+
+    svg.append("rect")
+      .attr("x", legendX)
+      .attr("y", legendY)
+      .attr("width", legendWidth)
+      .attr("height", legendHeight)
+      .style("fill", "url(#legend-gradient-2)");
+
+    svg.append("text")
+      .attr("x", legendX + legendWidth / 2 - 10)
+      .attr("y", legendY - 10)
+      .attr("text-anchor", "left")
+      .style("font-size", "11px")
+      .style("font-weight", "bold")
+      .style("font-family", "'Atten New', sans-serif")
+      .text("Total Sales (M)");
+
+    const legendScale = d3.scaleLinear()
+      .domain([200, 0])
+      .range([0, legendHeight]);
+
+    const legendAxis = d3.axisRight(legendScale)
+      .tickValues([200, 150, 100, 50]);
+
+    svg.append("g")
+      .attr("transform", `translate(${legendX + legendWidth}, ${legendY})`)
+      .call(legendAxis);
   });
+}
 
-  rect.addEventListener("mouseleave", () => {
-    tooltip.style.opacity = 0;
+function makeVis3() {
+  const visContainer = document.querySelector("#visContainer3");
+  const width = 850;
+  const height = 500;
+  const margin = { top: 40, right: 160, bottom: 80, left: 70 };
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
+
+  const svg = d3.create("svg").attr("width", width).attr("height", height);
+  visContainer.append(svg.node());
+
+  const g = svg.append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+  d3.csv("data/videogames_wide.csv").then(data => {
+
+    // total sales by genre + year
+    const salesMap = d3.rollup(
+      data,
+      v => d3.sum(v, d => +d.Global_Sales),
+      d => d.Genre,
+      d => d.Year
+    );
+
+    const genres = [...new Set(data.map(d => d.Genre))].sort();
+    const years = [...new Set(data.map(d => d.Year))]
+      .filter(y => y <= 2016) // up to 2016 agane cause incomplete data and n/a data
+      .sort();
+
+    //line data
+    const lineData = genres.map(genre => ({
+      genre,
+      values: years.map(year => ({
+        year,
+        sales: salesMap.get(genre)?.get(year) || 0
+      }))
+    }));
+
+    const xScale = d3.scalePoint()
+      .domain(years)
+      .range([0, innerWidth]);
+
+    const yScale = d3.scaleLinear()
+      .domain([0, d3.max(lineData, d => d3.max(d.values, v => v.sales))])
+      .nice()
+      .range([innerHeight, 0]);
+
+    const colorScale = d3.scaleOrdinal()
+      .domain(genres)
+      .range(d3.schemeTableau10.concat(d3.schemePastel1));
+
+    // gridlines
+    g.append("g")
+      .attr("class", "grid")
+      .call(d3.axisLeft(yScale).tickSize(-innerWidth).tickFormat(""))
+      .selectAll("line")
+      .style("stroke", "#e0e0e0")
+      .style("stroke-dasharray", "3,3");
+    g.select(".grid .domain").remove();
+
+    // global sales
+    g.append("g")
+      .attr("transform", `translate(0, ${innerHeight})`)
+      .call(d3.axisBottom(xScale))
+      .selectAll("text")
+      .attr("transform", "rotate(-45)")
+      .style("text-anchor", "end");
+
+    // year
+    g.append("g")
+      .call(d3.axisLeft(yScale));
+
+    // lines
+    const line = d3.line()
+      .x(d => xScale(d.year))
+      .y(d => yScale(d.sales));
+
+    // draw lines + dots
+    const lineGroups = g.selectAll(".line-group")
+      .data(lineData)
+      .join("g")
+      .attr("class", "line-group");
+
+    lineGroups.append("path")
+      .attr("class", d => `line line-${d.genre.replace(/\s+/g, '-')}`)
+      .attr("fill", "none")
+      .attr("stroke", d => colorScale(d.genre))
+      .attr("stroke-width", 2)
+      .attr("d", d => line(d.values));
+
+    lineGroups.selectAll("circle")
+      .data(d => d.values.map(v => ({ ...v, genre: d.genre })))
+      .join("circle")
+      .attr("cx", d => xScale(d.year))
+      .attr("cy", d => yScale(d.sales))
+      .attr("r", 3)
+      .attr("fill", d => colorScale(d.genre))
+      .on("mousemove", function(event, d) {
+        tooltip.style("opacity", 1)
+          .html(`<strong>${d.genre}</strong><br>Year: ${d.year}<br>Sales: ${d.sales.toFixed(2)}M`)
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY + 10) + "px");
+      })
+      .on("mouseout", () => tooltip.style("opacity", 0));
+
+    // year
+    g.append("text")
+      .attr("x", innerWidth / 2)
+      .attr("y", innerHeight + margin.bottom - 10)
+      .attr("text-anchor", "middle")
+      .style("font-size", "13px")
+      .style("font-weight", "bold")
+      .style("font-family", "'Atten New', sans-serif")
+      .text("Year");
+
+    // glob sales
+    g.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -innerHeight / 2)
+      .attr("y", -margin.left + 15)
+      .attr("text-anchor", "middle")
+      .style("font-size", "13px")
+      .style("font-weight", "bold")
+      .style("font-family", "'Atten New', sans-serif")
+      .text("Total Global Sales (Millions)");
+
+    // title
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", margin.top / 2)
+      .attr("text-anchor", "middle")
+      .style("font-size", "16px")
+      .style("font-weight", "bold")
+      .style("font-family", "'Atten New', sans-serif")
+      .text("Genre Peak Sales Over Time");
+
+    // legend, click to highlight
+    const legend = svg.append("g")
+      .attr("transform", `translate(${width - margin.right + 10}, ${margin.top})`);
+
+    legend.append("text")
+      .attr("x", 0)
+      .attr("y", -10)
+      .style("font-size", "13px")
+      .style("font-weight", "bold")
+      .style("font-family", "'Atten New', sans-serif")
+      .text("Genre (Click to Highlight)");
+
+    let activeGenre = null;
+
+    genres.forEach((genre, i) => {
+      const row = legend.append("g")
+        .attr("transform", `translate(0, ${i * 22})`)
+        .style("cursor", "pointer")
+        .on("click", function() {
+          if (activeGenre === genre) {
+            // deselect — restore all
+            activeGenre = null;
+            lineGroups.selectAll("path").style("opacity", 1).attr("stroke-width", 2);
+            lineGroups.selectAll("circle").style("opacity", 1);
+            legend.selectAll("text.legend-label").style("opacity", 1);
+          } else {
+            // highlight selected, fade others
+            activeGenre = genre;
+            lineGroups.selectAll("path")
+              .style("opacity", d => d.genre === genre ? 1 : 0.08)
+              .attr("stroke-width", d => d.genre === genre ? 3.5 : 1);
+            lineGroups.selectAll("circle")
+              .style("opacity", d => d.genre === genre ? 1 : 0.08);
+            legend.selectAll("text.legend-label")
+              .style("opacity", d => d === genre ? 1 : 0.4);
+          }
+        });
+
+      row.append("circle")
+        .attr("cx", 6)
+        .attr("cy", 6)
+        .attr("r", 6)
+        .attr("fill", colorScale(genre));
+
+      row.append("text")
+        .attr("class", "legend-label")
+        .datum(genre)
+        .attr("x", 18)
+        .attr("y", 11)
+        .style("font-size", "12px")
+        .style("font-family", "'Atten New', sans-serif")
+        .text(genre);
+    });
+
+    // tooltip
+    const tooltip = d3.select("body").append("div")
+      .style("position", "absolute")
+      .style("background", "rgba(0,0,0,0.75)")
+      .style("color", "white")
+      .style("padding", "6px 10px")
+      .style("border-radius", "6px")
+      .style("font-size", "13px")
+      .style("font-family", "'Atten New', sans-serif")
+      .style("pointer-events", "none")
+      .style("opacity", 0);
   });
-
-  //highlight bar on hover
-  rect.addEventListener("mouseenter", () => {
-    rect.setAttribute("stroke", "#333");
-    rect.setAttribute("stroke-width", 2);
-  });
-  rect.addEventListener("mouseleave", () => {
-    rect.removeAttribute("stroke");
-    rect.removeAttribute("stroke-width");
-  });
-
-
-});
-
-//art
-const svg = document.createElementNS(svgns, "svg");
-
-svg.setAttribute("viewBox", "0 0 500 250");
-svg.style.width = "50%";
-svg.style.height = "auto";
-svg.style.border = "3px solid black";
-artcontainer.appendChild(svg);
-
-const body = document.createElementNS(svgns, "ellipse");
-body.setAttribute("cx", 250);
-body.setAttribute("cy", 170);
-body.setAttribute("rx", 150);
-body.setAttribute("ry", 90);
-body.setAttribute("fill", "#c4a69f");
-svg.appendChild(body);
-
-const head = document.createElementNS(svgns, "ellipse");
-head.setAttribute("cx", 160);
-head.setAttribute("cy", 130);
-head.setAttribute("rx", 75);
-head.setAttribute("ry", 90);
-head.setAttribute("fill", "#c4a69f");
-head.setAttribute("transform", "rotate(-5, 200, 150)");
-svg.appendChild(head);
-
-const bottom = document.createElementNS(svgns, "rect");
-bottom.setAttribute("x", 0);
-bottom.setAttribute("y", 220);
-bottom.setAttribute("width", 500);
-bottom.setAttribute("height", 50);
-bottom.setAttribute("fill", "#624a33");
-svg.appendChild(bottom);
-
-//ears
-const leftEar = document.createElementNS(svgns, "path");
-leftEar.setAttribute("d", "M 80, 80 L125,30 L165,80 Z"); 
-leftEar.setAttribute("fill", "#c4a69f");
-leftEar.setAttribute("transform", "rotate(-20, 125, 55)");
-svg.appendChild(leftEar);
-
-const rightEar = document.createElementNS(svgns, "path");
-rightEar.setAttribute("d", "M130,80 L190,30 L215,80 Z");
-rightEar.setAttribute("fill", "#c4a69f");
-svg.appendChild(rightEar);
-
-//tail
-const tail = document.createElementNS(svgns, "path");
-tail.setAttribute("d", "M400,175 C440,170 440,120 420,120");
-
-tail.setAttribute("stroke", "#c4a69f");
-tail.setAttribute("stroke-width", 25);
-tail.setAttribute("fill", "none");
-tail.setAttribute("stroke-linecap", "round");
-
-svg.appendChild(tail);
-
-//eyes
-const leftEye = document.createElementNS(svgns, "circle");
-leftEye.setAttribute("cx", 130);
-leftEye.setAttribute("cy", 80);
-leftEye.setAttribute("r", 5);
-leftEye.setAttribute("fill", "#292929");
-
-svg.appendChild(leftEye);
-
-const rightEye = document.createElementNS(svgns, "circle");
-rightEye.setAttribute("cx", 175);
-rightEye.setAttribute("cy", 80);
-rightEye.setAttribute("r", 5);
-rightEye.setAttribute("fill", "#3f3f3f");
-
-svg.appendChild(rightEye);
-
-//mouth
-const mouth = document.createElementNS(svgns, "path");
-mouth.setAttribute("d", "M153,85 C155,70 150,95 160,90");
-
-mouth.setAttribute("stroke", "#474747");
-mouth.setAttribute("stroke-width", 5);
-mouth.setAttribute("fill", "none");
-mouth.setAttribute("stroke-linecap", "round");
-
-svg.appendChild(mouth);
-
-const rightMouth = document.createElementNS(svgns, "path");
-rightMouth.setAttribute("d", "M153,85 C155,70 150,95 160,90");
-rightMouth.setAttribute("stroke", "#474747");
-rightMouth.setAttribute("stroke-width", 5);
-rightMouth.setAttribute("fill", "none");
-rightMouth.setAttribute("stroke-linecap", "round");
-rightMouth.setAttribute("transform", "translate(306,0) scale(-1,1)");
-
-svg.appendChild(rightMouth);
-
-//whiskers
-const whisker1 = document.createElementNS(svgns, "line");
-whisker1.setAttribute("x1", 94);  // start X
-whisker1.setAttribute("y1", 85);   // start Y
-whisker1.setAttribute("x2", 83);  // end X
-whisker1.setAttribute("y2", 82);   // end Y
-whisker1.setAttribute("stroke", "#474747");
-whisker1.setAttribute("stroke-width", 3);
-whisker1.setAttribute("stroke-linecap", "round");
-
-svg.appendChild(whisker1);
-
-const whisker2 = document.createElementNS(svgns, "line");
-whisker2.setAttribute("x1", 98);  // start X
-whisker2.setAttribute("y1", 77);   // start Y
-whisker2.setAttribute("x2", 86);  // end X
-whisker2.setAttribute("y2", 70);   // end Y
-whisker2.setAttribute("stroke", "#474747");
-whisker2.setAttribute("stroke-width", 3);
-whisker2.setAttribute("stroke-linecap", "round");
-
-svg.appendChild(whisker2);
-
-const whisker3 = document.createElementNS(svgns, "line");
-whisker3.setAttribute("x1", 220);  // start X
-whisker3.setAttribute("y1", 73);   // start Y
-whisker3.setAttribute("x2", 200);  // end X
-whisker3.setAttribute("y2", 78);   // end Y
-whisker3.setAttribute("stroke", "#474747");
-whisker3.setAttribute("stroke-width", 3);
-whisker3.setAttribute("stroke-linecap", "round");
-
-svg.appendChild(whisker3);
-
-const whisker4 = document.createElementNS(svgns, "line");
-whisker4.setAttribute("x1", 220);  // start X
-whisker4.setAttribute("y1", 86);   // start Y
-whisker4.setAttribute("x2", 200);  // end X
-whisker4.setAttribute("y2", 85);   // end Y
-whisker4.setAttribute("stroke", "#474747");
-whisker4.setAttribute("stroke-width", 3);
-whisker4.setAttribute("stroke-linecap", "round");
-
-svg.appendChild(whisker4);
-
-
+}

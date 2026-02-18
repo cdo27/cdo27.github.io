@@ -3,15 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualization</title>
-   <link rel="stylesheet" href="style.css">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
-<!-- 
-inside this file include:
-Visualizations
--->
-
 <body>
     <header>
         <h1 class="logo">
@@ -24,29 +18,28 @@ Visualizations
         <a href="visualizations.html" class="active">visualizations</a>
         </nav>
     </header>
-    
     <main>
         <section class="visualization-section">
             <h1>Visualizations</h1>
             <div class = svg-section>
-                <h2>Data Visualization</h2>
-                <div id="data-vis"></div>
+                <h2>Visualization 1: Global Sales</h2>
+                <div id ="visContainer1"></div>
             </div>
-            <div id="tooltip"></div>
-            
             <div class = svg-section>
-                <h2>SVG Art</h2>
-                <div id="svg-art"></div>
+                <h2>Visualization 2: Sales Over Time by Platform and Genre</h2>
+                <div id ="visContainer2"></div>
+            </div>
+            <div class = svg-section>
+                <div id ="visContainer3"></div>
             </div>
             
         </section>
         
     </main>
-    <script src="main.js" type="text/javascript"></script>
-
-    <footer>
-    <p>© 2026 CD</p>
-    </footer>
     
 </body>
+<footer>
+    <p>© 2026 CD</p>
+</footer>
+<script type ="module" src="vis.js"></script>
 </html>
