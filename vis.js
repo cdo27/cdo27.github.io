@@ -15,7 +15,10 @@ makeVis4();
 //NA vs Japan Platform Sales
 makeVis5();
 
+//Publishers by decade
 makeVis6();
+
+//Publishers over time, peaks and falls
 makeVis7();
 
 function makeVis1() {
@@ -873,17 +876,18 @@ function makeVis5() {
         .attr("height", yScale.bandwidth())
         .attr("fill", "#4472C4")
         .on("mousemove", function(event) {
-          d3.select(this).attr("opacity", 0.8);
+          d3.select(this).attr("stroke", "black").attr("stroke-width", 1.5);
           tooltip.style("opacity", 1)
             .html(`<strong>${platform}</strong><br>NA Sales: ${na.toFixed(2)}M`)
             .style("left", (event.pageX + 10) + "px")
             .style("top", (event.pageY + 10) + "px");
         })
         .on("mouseout", function() {
-          d3.select(this).attr("opacity", 1);
+          d3.select(this).attr("stroke", "none");
           tooltip.style("opacity", 0);
         });
     });
+
 
     // JP bars 
     platforms.forEach(platform => {
@@ -895,14 +899,14 @@ function makeVis5() {
         .attr("height", yScale.bandwidth())
         .attr("fill", "#C0392B")
         .on("mousemove", function(event) {
-          d3.select(this).attr("opacity", 0.8);
+          d3.select(this).attr("stroke", "black").attr("stroke-width", 1.5);
           tooltip.style("opacity", 1)
             .html(`<strong>${platform}</strong><br>JP Sales: ${jp.toFixed(2)}M`)
             .style("left", (event.pageX + 10) + "px")
             .style("top", (event.pageY + 10) + "px");
         })
         .on("mouseout", function() {
-          d3.select(this).attr("opacity", 1);
+          d3.select(this).attr("stroke", "none");
           tooltip.style("opacity", 0);
         });
     });
@@ -911,7 +915,7 @@ function makeVis5() {
     g.append("line")
       .attr("x1", center).attr("x2", center)
       .attr("y1", 0).attr("y2", innerHeight)
-      .style("stroke", "#333").style("stroke-width", 1.5);
+      .style("stroke", "#898989").style("stroke-width", 0.1);
 
     // jp
     g.append("g")
@@ -1004,6 +1008,366 @@ function makeVis5() {
         .style("font-size", "12px")
         .style("font-family", "'Atten New', sans-serif")
         .text(label);
+    });
+  });
+}
+
+function makeVis6() {
+  const width = 900;
+  const facetHeight = 220;
+  const margin = { top: 30, right: 150, bottom: 50, left: 220 };
+  const innerWidth = width - margin.left - margin.right;
+
+  const visContainer = document.querySelector("#visContainer6");
+
+  const decades = ["1990s", "2000s", "2010s"];
+  const decadeColors = { "1990s": "#5b7eb5", "2000s": "#e88b3a", "2010s": "#5a9e5a" };
+
+  d3.csv("data/videogames_wide.csv").then(data => {
+
+    //by decade
+    data.forEach(d => {
+      const year = +d.Year;
+      if (year >= 1990 && year < 2000) d.decade = "1990s";
+      else if (year >= 2000 && year < 2010) d.decade = "2000s";
+      else if (year >= 2010) d.decade = "2010s";
+    });
+
+    decades.forEach((decade, i) => {
+
+      const decadeData = data.filter(d => d.decade === decade);
+
+      // by publisher
+      const publisherTotals = d3.rollup(
+        decadeData,
+        v => d3.sum(v, d => +d.Global_Sales),
+        d => d.Publisher
+      );
+
+      // top 5
+      const top5 = [...publisherTotals.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([publisher, sales]) => ({ publisher, sales }));
+
+      const innerHeight = facetHeight - margin.top - margin.bottom;
+
+      const svg = d3.create("svg").attr("width", width).attr("height", facetHeight);
+      visContainer.append(svg.node());
+
+      const g = svg.append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+      const xScale = d3.scaleLinear()
+        .domain([0, 900])
+        .range([0, innerWidth]);
+
+      const yScale = d3.scaleBand()
+        .domain(top5.map(d => d.publisher))
+        .range([0, innerHeight])
+        .padding(0.2);
+
+      // gridlines
+      [0, 100, 200, 300, 400, 500, 600, 700, 800, 900].forEach(t => {
+        g.append("line")
+          .attr("x1", xScale(t)).attr("x2", xScale(t))
+          .attr("y1", 0).attr("y2", innerHeight)
+          .style("stroke", "#e0e0e0").style("stroke-width", 1);
+      });
+
+      // bars
+      g.selectAll("rect")
+        .data(top5)
+        .join("rect")
+        .attr("x", 0)
+        .attr("y", d => yScale(d.publisher))
+        .attr("width", d => xScale(d.sales))
+        .attr("height", yScale.bandwidth())
+        .attr("fill", decadeColors[decade])
+        .on("mousemove", function(event, d) {
+          d3.select(this).attr("stroke", "black").attr("stroke-width", 1.5);
+          tooltip.style("opacity", 1)
+            .html(`<strong>${d.publisher}</strong><br>Sales: ${d.sales.toFixed(2)}M`)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY + 10) + "px");
+        })
+        .on("mouseout", function() {
+          d3.select(this).attr("stroke", "none");
+          tooltip.style("opacity", 0);
+        });
+
+      // y axis
+      g.append("g")
+        .call(d3.axisLeft(yScale));
+
+      // x axis 
+      if (i === decades.length - 1) {
+        g.append("g")
+          .attr("transform", `translate(0, ${innerHeight})`)
+          .call(d3.axisBottom(xScale).tickValues([0, 100, 200, 300, 400, 500, 600, 700, 800, 900]));
+
+        g.append("text")
+          .attr("x", innerWidth / 2)
+          .attr("y", innerHeight + 40)
+          .attr("text-anchor", "middle")
+          .style("font-size", "13px")
+          .style("font-weight", "bold")
+          .style("font-family", "'Atten New', sans-serif")
+          .text("Total Global Sales (Millions)");
+      }
+
+      // decade label 
+      svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -(facetHeight / 2))
+        .attr("y", 15)
+        .attr("text-anchor", "middle")
+        .style("font-size", "12px")
+        .style("font-weight", "bold")
+        .style("font-family", "'Atten New', sans-serif")
+        .text(decade);
+
+      // publisher label
+      g.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -innerHeight / 2)
+        .attr("y", -margin.left + 30)
+        .attr("text-anchor", "middle")
+        .style("font-size", "11px")
+        .style("font-weight", "bold")
+        .style("font-family", "'Atten New', sans-serif")
+        .text("Publisher");
+
+      // title
+      if (i === 0) {
+        svg.append("text")
+          .attr("x", margin.left)
+          .attr("y", 15)
+          .style("font-size", "16px")
+          .style("font-weight", "bold")
+          .style("font-family", "'Atten New', sans-serif")
+          .text("Top 5 Publishers by Decade");
+      }
+    });
+
+    // tooltip
+    const tooltip = d3.select("body").append("div")
+      .style("position", "absolute")
+      .style("background", "rgba(0,0,0,0.75)")
+      .style("color", "white")
+      .style("padding", "6px 10px")
+      .style("border-radius", "6px")
+      .style("font-size", "13px")
+      .style("font-family", "'Atten New', sans-serif")
+      .style("pointer-events", "none")
+      .style("opacity", 0);
+  });
+}
+
+function makeVis7() {
+  const width = 900;
+  const height = 500;
+  const margin = { top: 40, right: 220, bottom: 60, left: 70 };
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
+
+  const svg = d3.create("svg").attr("width", width).attr("height", height);
+  const visContainer = document.querySelector("#visContainer7");
+  visContainer.append(svg.node());
+
+  const g = svg.append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+  d3.csv("data/videogames_wide.csv").then(data => {
+
+    // find top 5 publishers by total global sales
+    const publisherTotals = d3.rollup(
+      data,
+      v => d3.sum(v, d => +d.Global_Sales),
+      d => d.Publisher
+    );
+
+    const top5publishers = [...publisherTotals.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([publisher]) => publisher);
+
+    //publisher + year
+    const salesMap = d3.rollup(
+      data.filter(d => top5publishers.includes(d.Publisher)),
+      v => d3.sum(v, d => +d.Global_Sales),
+      d => d.Publisher,
+      d => d.Year
+    );
+
+    const years = [...new Set(data.map(d => d.Year))]
+      .filter(y => y && +y >= 1990 && +y <= 2016)
+      .sort();
+
+    const lineData = top5publishers.map(publisher => ({
+      publisher,
+      values: years.map(year => ({
+        year,
+        sales: salesMap.get(publisher)?.get(year) || 0
+      }))
+    }));
+
+    const xScale = d3.scalePoint()
+      .domain(years)
+      .range([0, innerWidth]);
+
+    const yScale = d3.scaleLinear()
+      .domain([0, d3.max(lineData, d => d3.max(d.values, v => v.sales))])
+      .nice()
+      .range([innerHeight, 0]);
+
+    const colorScale = d3.scaleOrdinal()
+      .domain(top5publishers)
+      .range(["#c45944", "#E88B3A", "#5d36be", "#5dcee2", "#50a850"]);
+
+    // gridlines
+    yScale.ticks(6).forEach(t => {
+      g.append("g")
+      .attr("class", "grid")
+      .call(d3.axisLeft(yScale).tickSize(-innerWidth).tickFormat(""))
+      .selectAll("line")
+      .style("stroke", "#e0e0e0")
+      .style("stroke-dasharray", "3,3");
+    g.select(".grid .domain").remove();
+    });
+
+    // axes
+    g.append("g")
+      .attr("transform", `translate(0, ${innerHeight})`)
+      .call(d3.axisBottom(xScale))
+      .selectAll("text")
+      .attr("transform", "rotate(-45)")
+      .style("text-anchor", "end");
+
+    g.append("g")
+      .call(d3.axisLeft(yScale));
+
+    // line gen
+    const line = d3.line()
+      .x(d => xScale(d.year))
+      .y(d => yScale(d.sales));
+
+    // draw lines + dots
+    const lineGroups = g.selectAll(".line-group")
+      .data(lineData)
+      .join("g")
+      .attr("class", "line-group");
+
+    lineGroups.append("path")
+      .attr("fill", "none")
+      .attr("stroke", d => colorScale(d.publisher))
+      .attr("stroke-width", 2)
+      .attr("d", d => line(d.values));
+
+    lineGroups.selectAll("circle")
+      .data(d => d.values.map(v => ({ ...v, publisher: d.publisher })))
+      .join("circle")
+      .attr("cx", d => xScale(d.year))
+      .attr("cy", d => yScale(d.sales))
+      .attr("r", 4)
+      .attr("fill", d => colorScale(d.publisher))
+      .on("mousemove", function(event, d) {
+        tooltip.style("opacity", 1)
+          .html(`<strong>${d.publisher}</strong><br>Year: ${d.year}<br>Sales: ${d.sales.toFixed(2)}M`)
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY + 10) + "px");
+      })
+      .on("mouseout", () => tooltip.style("opacity", 0));
+
+    // x label
+    g.append("text")
+      .attr("x", innerWidth / 2)
+      .attr("y", innerHeight + margin.bottom - 5)
+      .attr("text-anchor", "middle")
+      .style("font-size", "13px")
+      .style("font-weight", "bold")
+      .style("font-family", "'Atten New', sans-serif")
+      .text("Year");
+
+    // y label
+    g.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -innerHeight / 2)
+      .attr("y", -margin.left + 15)
+      .attr("text-anchor", "middle")
+      .style("font-size", "13px")
+      .style("font-weight", "bold")
+      .style("font-family", "'Atten New', sans-serif")
+      .text("Total Global Sales (Millions)");
+
+    // title
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", margin.top / 2)
+      .attr("text-anchor", "middle")
+      .style("font-size", "16px")
+      .style("font-weight", "bold")
+      .style("font-family", "'Atten New', sans-serif")
+      .text("Top 5 Publishers: Rise and Falls Over Time");
+
+    // tooltip
+    const tooltip = d3.select("body").append("div")
+      .style("position", "absolute")
+      .style("background", "rgba(0,0,0,0.75)")
+      .style("color", "white")
+      .style("padding", "6px 10px")
+      .style("border-radius", "6px")
+      .style("font-size", "13px")
+      .style("font-family", "'Atten New', sans-serif")
+      .style("pointer-events", "none")
+      .style("opacity", 0);
+
+    // legend, click highlight
+    const legend = svg.append("g")
+      .attr("transform", `translate(${width - margin.right + 10}, ${margin.top})`);
+
+    legend.append("text")
+      .attr("x", 0).attr("y", -10)
+      .style("font-size", "13px")
+      .style("font-weight", "bold")
+      .style("font-family", "'Atten New', sans-serif")
+      .text("Publisher (Click to highlight)");
+
+    let activePublisher = null;
+
+    top5publishers.sort().forEach((publisher, i) => {
+      const row = legend.append("g")
+        .attr("transform", `translate(0, ${i * 24})`)
+        .style("cursor", "pointer")
+        .on("click", function() {
+          if (activePublisher === publisher) {
+            activePublisher = null;
+            lineGroups.selectAll("path").style("opacity", 1).attr("stroke-width", 2);
+            lineGroups.selectAll("circle").style("opacity", 1);
+            legend.selectAll("text.legend-label").style("opacity", 1);
+          } else {
+            activePublisher = publisher;
+            lineGroups.selectAll("path")
+              .style("opacity", d => d.publisher === publisher ? 1 : 0.08)
+              .attr("stroke-width", d => d.publisher === publisher ? 3.5 : 1);
+            lineGroups.selectAll("circle")
+              .style("opacity", d => d.publisher === publisher ? 1 : 0.08);
+            legend.selectAll("text.legend-label")
+              .style("opacity", d => d === publisher ? 1 : 0.4);
+          }
+        });
+
+      row.append("circle")
+        .attr("cx", 6).attr("cy", 6).attr("r", 6)
+        .attr("fill", colorScale(publisher));
+
+      row.append("text")
+        .attr("class", "legend-label")
+        .datum(publisher)
+        .attr("x", 18).attr("y", 11)
+        .style("font-size", "12px")
+        .style("font-family", "'Atten New', sans-serif")
+        .text(publisher);
     });
   });
 }
